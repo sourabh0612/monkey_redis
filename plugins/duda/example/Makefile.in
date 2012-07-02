@@ -1,0 +1,15 @@
+CC      = gcc -g -Wall -DDEBUG
+INCDIR  = ../src -I../../../src/include/ -I../
+SOURCES = redisWS.c
+OBJECTS = redisWS.o
+
+all: redisWS.duda
+
+redisWS.duda: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -shared -Wl -o $@ $^ -lc
+
+.c.o: $(SOURCES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(DEFS) -I$(INCDIR) -fPIC -c $<
+
+clean:
+	rm -rf *.o *~ *.*duda*
