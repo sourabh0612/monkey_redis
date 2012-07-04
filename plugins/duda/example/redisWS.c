@@ -33,6 +33,7 @@ void connectCallback(const redisAsyncContext *c, int status) {
     if (status != REDIS_OK) {
         printf("Error: %s\n", c->errstr);
         exit(1);
+        return;
     }
     printf("Connected...\n");
 }
@@ -44,8 +45,8 @@ void disconnectCallback(const redisAsyncContext *c, int status) {
     }
     printf("Disconnected...\n");
     duda_request_t *dr = redis->getDudarequest(c);
-    printf("dr:%p\n",dr);
     response->cont(dr);
+    response->body_print(dr, "Redis test successful\n", 22);
     response->end(dr, cb_end);
 }
 
@@ -54,7 +55,7 @@ void versionCallback(redisAsyncContext *c, void *r, void *privdata) {
     if (reply == NULL) return;
     
     const char *field = "redis_version:";
-    char *p, *eptr,*version;
+    char *p, *eptr;
     int major, minor;
 
     p = strstr(reply->str,field);
@@ -63,7 +64,6 @@ void versionCallback(redisAsyncContext *c, void *r, void *privdata) {
     minor = strtol(p,&eptr,10);
     
     printf("Version:%d.%d\n",major,minor);
-//    response->body_print((duda_request_t *)privdata, major+minor+"\n", st);
     redis->disconnect(c);
 }
 
@@ -93,16 +93,13 @@ void cb_version(duda_request_t *dr)
     response->http_status(dr, 200);
     response->http_header(dr, "Content-Type: text/plain", 24);
     response->wait(dr);    
-    printf("dr:%p\n",dr);
-    printf("waiting");
-
+    
     redisAsyncContext *rc = redis->connect("127.0.0.1", 6379, dr);
+    
     redis->attach(rc,dr);
     redis->setConnectCallback(rc,connectCallback);
     redis->setDisconnectCallback(rc, disconnectCallback);
     redis->command(rc, versionCallback, dr, "INFO");
-
-    response->body_print(dr, "Redis test successful\n", 22);
 
 }
 
@@ -114,14 +111,13 @@ void cb_read_key(duda_request_t *dr)
     response->wait(dr);
 
     redisAsyncContext *rc = redis->connect("127.0.0.1", 6379, dr);
+    
     redis->attach(rc,dr);
     redis->setConnectCallback(rc,connectCallback);
     redis->setDisconnectCallback(rc, disconnectCallback);
     key = param->get(dr, 0);
     printf("%p\n",key);
     redis->command(rc, getCallback, key, "GET %b", key, strlen(key));
-
-    response->body_print(dr, "Redis test successful\n", 22);
 
 }
 
@@ -130,17 +126,16 @@ void cb_write_key(duda_request_t *dr)
     char *key,*value;
     response->http_status(dr, 200);
     response->http_header(dr, "Content-Type: text/plain", 24);
-    response->wait(dr);
-
+    
     redisAsyncContext *rc = redis->connect("127.0.0.1", 6379, dr);
+    response->wait(dr);
+    
     redis->attach(rc,dr);
     redis->setConnectCallback(rc,connectCallback);
     redis->setDisconnectCallback(rc, disconnectCallback);
     key = param->get(dr, 0);
     value = param->get(dr,1);
     redis->command(rc, setCallback, NULL, "SET %b %b", key, strlen(key), value, strlen(value));
-
-    response->body_print(dr, "Redis test successful\n", 22);
 
 }
 
