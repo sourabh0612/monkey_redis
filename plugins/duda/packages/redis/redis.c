@@ -101,7 +101,7 @@ redisAsyncContext * redis_connect(const char *ip, int port,
     struct mk_list *list_redis_fd;
     duda_redis_t *dr;
     redisAsyncContext *c = redisAsyncConnect(ip, port);
-    if (c->err) {
+    if (c->err || c == NULL) {
         printf("REDIS: Can't connect: %s\n", c->errstr);
         exit(EXIT_FAILURE);
     }
@@ -118,6 +118,17 @@ redisAsyncContext * redis_connect(const char *ip, int port,
 
     mk_list_add(&dr->_head_redis_fd, list_redis_fd);
     return c;
+}
+
+void redis_disconnect(redisAsyncContext *rc)
+{
+    redis_free(rc);
+    redisAsyncDisconnect(rc);
+}
+
+void redis_free(redisAsyncContext *rc)
+{
+    event->delete(rc->c.fd);
 }
 
 int redis_attach(redisAsyncContext *ac, duda_request_t *dr)
@@ -139,13 +150,17 @@ int redis_init()
 duda_request_t * redis_request_map(const redisAsyncContext *rc)
 {
     struct mk_list *list_redis_fd,*head;
+    duda_request_t *dr;
     duda_redis_t *dr_entry;
     list_redis_fd = pthread_getspecific(redis_key);
 
     mk_list_foreach(head, list_redis_fd) {
         dr_entry = mk_list_entry(head, duda_redis_t, _head_redis_fd);
         if(dr_entry->rc == rc) {
-            return dr_entry->dr;
+            dr = dr_entry->dr;
+            mk_list_del(&dr_entry->_head_redis_fd);
+            free(dr_entry);
+            return dr;
         }
     }
     return NULL;

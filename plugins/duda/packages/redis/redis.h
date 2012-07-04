@@ -34,6 +34,7 @@ struct duda_api_redis {
     int (*command) (redisAsyncContext *, 
                     void (*) (redisAsyncContext*, void*, void*), void *, 
                     const char *,...);
+    void (*free) (redisAsyncContext *);
     duda_request_t * (*getDudarequest) (const redisAsyncContext *);
 };
 
@@ -42,9 +43,11 @@ typedef struct duda_api_redis redis_object_t;
 redis_object_t *redis;
 
 redisAsyncContext * redis_connect(const char *ip, int port, duda_request_t *dr);
+void redis_disconnect(redisAsyncContext *rc);
 int redis_attach(redisAsyncContext *rc, duda_request_t *dr);
 int redis_init();
 duda_request_t * redis_request_map(const redisAsyncContext *rc);
+void redis_free(redisAsyncContext *rc);
 
 void redisAddRead(void *privdata);
 void redisDel(void *privdata);

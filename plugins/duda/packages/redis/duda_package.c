@@ -35,12 +35,13 @@ struct duda_api_redis *get_redis_api()
 
     /* Map API calls */
     redis->connect               = redis_connect;
-    redis->disconnect            = redisAsyncDisconnect;  
+    redis->disconnect            = redis_disconnect;  
     redis->attach                = redis_attach;
     redis->setConnectCallback    = redisAsyncSetConnectCallback;
     redis->setDisconnectCallback = redisAsyncSetDisconnectCallback;
     redis->command               = redisAsyncCommand;
     redis->getDudarequest        = redis_request_map;
+    redis->free                  = redis_free;
     
     return redis;
 }
