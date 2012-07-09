@@ -149,12 +149,12 @@ int redis_init()
 
 duda_request_t * redis_request_map(const redisAsyncContext *rc)
 {
-    struct mk_list *list_redis_fd,*head;
+    struct mk_list *list_redis_fd,*head,*tmp;
     duda_request_t *dr;
     duda_redis_t *dr_entry;
     list_redis_fd = pthread_getspecific(redis_key);
 
-    mk_list_foreach(head, list_redis_fd) {
+    mk_list_foreach_safe(head, tmp, list_redis_fd) {
         dr_entry = mk_list_entry(head, duda_redis_t, _head_redis_fd);
         if(dr_entry->rc == rc) {
             dr = dr_entry->dr;

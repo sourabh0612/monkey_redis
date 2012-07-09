@@ -116,7 +116,6 @@ void cb_read_key(duda_request_t *dr)
     redis->setConnectCallback(rc,connectCallback);
     redis->setDisconnectCallback(rc, disconnectCallback);
     key = param->get(dr, 0);
-    printf("%p\n",key);
     redis->command(rc, getCallback, key, "GET %b", key, strlen(key));
 
 }
@@ -141,7 +140,7 @@ void cb_write_key(duda_request_t *dr)
 
 void *cb_global_mem()
 {
-    void *mem = malloc(16);
+    void *mem = monkey->mem_alloc(16);
     return mem;
 }
 
